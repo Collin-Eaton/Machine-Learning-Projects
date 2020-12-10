@@ -1,0 +1,84 @@
+# Importing packages
+import numpy as np
+np.random.seed(seed=484)
+import warnings
+warnings.filterwarnings('ignore')
+import pandas as pd
+
+#Reading and Displaying CSV Mortgage lending File
+mort_df=pd.read_csv('mortgagedenials.csv')
+print(mort_df.head())
+print("Shape: {}".format(str(mort_df.shape)))
+
+# Define a label (outcome) vector,  𝑦 , to be an indicator for whether the individual's mortgage application was denied, and define a feature (regressor) matrix,  𝑋 , to be all remaining columns:
+y=mort_df['deny']
+X=mort_df[mort_df.columns[1::]]
+X.head()
+
+#Create Training and Test sets
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
+
+#Import Random Forrest
+from sklearn.ensemble import RandomForestClassifier
+
+#Import and use Grid search to find best parameters for Random Forrest
+from sklearn.model_selection import GridSearchCV
+param_dict = {"n_estimators":[100,500,1000,2500],
+              "max_depth":[1,3,5,10]}
+rf = RandomForestClassifier()
+rf.fit(X_train, y_train)
+gs = GridSearchCV(rf, param_dict, scoring = "f1_macro", 
+                  n_jobs = -1, verbose = 2)
+gs.fit(X_train, y_train)
+print("Best Params: {}".format(gs.best_params_))
+
+#Fit the Training model with best parameters and apply model to test set
+rf1= RandomForestClassifier(max_depth=10, n_estimators=1000)
+rf1.fit(X_train, y_train)
+forest_pred = rf1.predict(X_test)
+
+#Results for Test predictions versus actual values
+from sklearn.metrics import f1_score, classification_report
+print(classification_report(y_test, forest_pred))
+from sklearn.metrics import confusion_matrix
+y_pred = gs.predict(X_test)
+conmat = confusion_matrix(y_test, y_pred)
+print(conmat)
+
+#importing support vector machine and checking for best parameters
+from sklearn.svm import SVC
+sv=SVC(kernel = 'linear')
+sv_params = {"C": [0.03, 0.06, .09, .12, 0.15],  
+             'gamma': [0.3, .6, .9, 1.2, 1.5]}
+gridsearch = GridSearchCV(sv, 
+                          sv_params, 
+                          scoring='f1')
+
+
+#Fitting model for SVM
+gridsearch.fit(X_train, y_train)
+print("Best Params: {}".format(gridsearch.best_params_))
+
+y_pred = gridsearch.predict(X_test)
+
+#Checking results from SVM
+report = classification_report(y_test, y_pred)
+print(report)
+
+from sklearn.metrics import confusion_matrix
+
+conmat = confusion_matrix(y_test, y_pred)
+print(conmat)
+
+#Fitting best model
+y=mort_df['deny']
+X=mort_df[mort_df.columns[1::]]
+rf1.fit(X, y)
+forest_pred = rf1.predict(X)
+print(classification_report(y, forest_pred))
+
+#Running model on new applicants
+mort_df1=pd.read_csv('newapplicants.csv')
+y=mort_df1['deny']
+X=mort_df[mort_df.columns[1::]]
