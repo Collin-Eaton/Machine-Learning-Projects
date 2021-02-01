@@ -1,0 +1,36 @@
+#importing packages
+import pandas as pd
+import numpy as np
+from sklearn import linear_model
+
+#importing recruiting data from excel
+recruiting_data=pd.read_csv('predictive data by rollup 2.csv')
+recruiting_data.head()
+
+#setting up indepenent variables
+x=recruiting_data[['Time of Day','Day of Week','Sent','Outreach #']]
+x.tail(n=10)
+
+#Setting up Dependent variable
+y=recruiting_data[['Response Rate %']]
+recruiting_data.head()
+
+#creating instance for model
+lm = linear_model.LinearRegression()
+model = lm.fit(x,y)
+lm.coef_
+
+x=recruiting_data[recruiting_data.columns[8::]] 
+y=recruiting_data[['Response Rate %']]
+lm = linear_model.LinearRegression()
+model = lm.fit(x,y)
+lm.coef_
+
+#Pulling up correlation matrix to see which variables correlate the most with recruiting responses
+recruiting_data.corr()
+
+#running Ordinary Least Squares model
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+model = sm.OLS(y, x)
+results = model.fit()
