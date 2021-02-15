@@ -1,0 +1,45 @@
+#importing requests to get data
+import requests as req
+
+#getting data from MetaWeather
+response = req.get('https://www.metaweather.com/api/location/2391279/')
+response.json()
+response.json()['consolidated_weather']
+
+#importing pandas to manipulate pulled data
+import pandas as pd
+
+#normalizing data using pandas
+df = pd.io.json.json_normalize(response.json())
+
+#create object days which contains all the weather info for each day
+days = response.json()['consolidated_weather']
+
+#normalize and check the format for the first day
+df = pd.io.json.json_normalize(days[0])
+
+#create a loop that appends each days info
+for day in days [1:]:
+    df = df.append(pd.io.json.json_normalize(day))
+    
+#Change data format for dates to datetime
+df['created'] = pd.to_datetime(df['created'], utc=True)
+df['applicable_date'] = pd.to_datetime(df['applicable_date']).dt.tz_localize('US/Mountain')
+
+#connect to mongo db
+from pymongo import MongoClient
+client = MongoClient()
+db = client ['weather_test']
+collection = db['denver']
+type(collection)
+collection.find_one()
+
+#convert dataframe to dictionary to be able to upload to database
+df.to_dict('records')
+
+#make the dictionary a collection to use in MongoDB
+collection.insert_many(df.to_dict('records'))
+
+
+
+
